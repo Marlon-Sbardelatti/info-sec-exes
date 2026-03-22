@@ -62,9 +62,8 @@ def get_db():
 
 
 class WeakPasswordError(HTTPException):
-    def _init_(self, message: Optional[str] = "Senha fraca."):
-        super()._init_(status_code=400, detail=message)
-        pass
+    def __init__(self, message: Optional[str] = "Senha fraca."):
+        super().__init__(status_code=400, detail=message)
 
 
 # Rota para registrar usuário
@@ -78,13 +77,25 @@ def register_user(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Usuário já existe"
         )
 
-    if len(payload.password) < 8:
+    # prevenções contra senhas fracas
+    if len(payload.password) < 15:
         raise WeakPasswordError(message="A senha deve ter no mínimo 8 caracteres.")
 
     special_chars = re.findall(r"\W", payload.password)
     if not special_chars:
         raise WeakPasswordError(
             message="A senha deve ter no mínimo 1 caracter especial."
+        )
+
+    capital_letters = re.search(r"[A-Z]", payload.password)
+    if not capital_letters:
+        raise WeakPasswordError(
+            message="A senha deve conter pelo menos 1 letra maiúscula."
+        )
+
+    if payload.username in payload.password or payload.email in payload.password:
+        raise WeakPasswordError(
+            message="Não utilize suas informações pessoais na senha."
         )
 
     user = User(
@@ -100,9 +111,52 @@ def register_user(
 # Rota de login
 @app.post("/login/")
 def login(request: Request, payload: LoginRequest, db: Session = Depends(get_db)):
-    now = datetime.datetime.now()
-    five_minutes_ago = now - datetime.timedelta(minutes=5)
-    one_minute_ago = now - datetime.timedelta(minutes=1)
+    # Restringe tentativas por IP
+    ip_address = _verify_ip_attempts(request, db)
+
+    # Bloqueio temporário de contas
+    _verify_user_attempts(payload, db)
+
+    user = (
+        db.query(User)
+        .filter(User.username == payload.username, User.password == payload.password)
+        .first()
+    )
+
+    if not user:
+        one_minute_ago = datetime.datetime.now() - datetime.timedelta(minutes=1)
+        consecutive_attempts = (
+            db.query(func.count(LoginAttempt.id))
+            .filter(
+                LoginAttempt.username == payload.username,
+                LoginAttempt.created_at >= one_minute_ago,
+            )
+            .scalar()
+        )
+
+        # Marca como bloqueado terceira tentativa consecutiva para o mesmo usuário
+        blocked_at = None
+        if consecutive_attempts + 1 >= 2:
+            blocked_at = datetime.datetime.now()
+
+        # Registra tentativa de login por IP e conta alvo
+        attempt = LoginAttempt(
+            username=payload.username, ip_address=ip_address, blocked_at=blocked_at
+        )
+
+        db.add(attempt)
+        db.commit()
+        db.refresh(attempt)
+
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciais inválidas"
+        )
+
+    return {"message": "Login realizado com sucesso!"}
+
+
+def _verify_ip_attempts(request: Request, db: Session = Depends(get_db)) -> str:
+    five_minutes_ago = datetime.datetime.now() - datetime.timedelta(minutes=5)
 
     ip = request.client.host
 
@@ -120,6 +174,11 @@ def login(request: Request, payload: LoginRequest, db: Session = Depends(get_db)
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Limite de requisições por IP excedido. Tente novamente mais tarde.",
         )
+    return ip
+
+
+def _verify_user_attempts(payload: LoginRequest, db: Session = Depends(get_db)) -> None:
+    five_minutes_ago = datetime.datetime.now() - datetime.timedelta(minutes=5)
 
     last_attempt = (
         db.query(LoginAttempt)
@@ -135,40 +194,6 @@ def login(request: Request, payload: LoginRequest, db: Session = Depends(get_db)
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Usuário bloqueado por 5 minutos.",
         )
-
-    user = (
-        db.query(User)
-        .filter(User.username == payload.username, User.password == payload.password)
-        .first()
-    )
-
-    if not user:
-        consecutive_attempts = (
-            db.query(func.count(LoginAttempt.id))
-            .filter(
-                LoginAttempt.username == payload.username,
-                LoginAttempt.created_at >= one_minute_ago,
-            )
-            .scalar()
-        )
-
-        blocked_at = None
-        if consecutive_attempts + 1 >= 2:
-            blocked_at = now
-
-        attempt = LoginAttempt(
-            username=payload.username, ip_address=ip, blocked_at=blocked_at
-        )
-
-        db.add(attempt)
-        db.commit()
-        db.refresh(attempt)
-
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciais inválidas"
-        )
-
-    return {"message": "Login realizado com sucesso!"}
 
 
 # Inicialização direta do servidor
