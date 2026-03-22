@@ -79,7 +79,7 @@ def register_user(
 
     # prevenções contra senhas fracas
     if len(payload.password) < 15:
-        raise WeakPasswordError(message="A senha deve ter no mínimo 8 caracteres.")
+        raise WeakPasswordError(message="A senha deve ter no mínimo 15 caracteres.")
 
     special_chars = re.findall(r"\W", payload.password)
     if not special_chars:
