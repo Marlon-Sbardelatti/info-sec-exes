@@ -21,14 +21,14 @@ def main() -> None:
 
         match operation:
             case 1:
-                key = str(input("Chave (mínimo 3 caracteres): "))
+                key = sanitize(str(input("Chave (mínimo 3 caracteres): ")))
                 plaintext = input("Texto claro: ")
 
                 encrypted = encrypt(plaintext, key)
                 print("Texto cifrado:", encrypted, "\n")
 
             case 2:
-                key = str(input("Chave (mínimo 3 caracteres): "))
+                key = sanitize(str(input("Chave (mínimo 3 caracteres): ")))
                 encrypted_text = input("Texto cifrado: ")
 
                 decrypted = decrypt(encrypted_text, key)
@@ -74,7 +74,7 @@ def decrypt(encrypted_text: str, key: str) -> str:
 
 
 def sanitize(plaintext: str) -> str:
-    return plaintext.strip().upper()
+    return plaintext.strip().upper().replace(" ", "")
 
 
 if __name__ == "__main__":
