@@ -3,13 +3,13 @@ from Crypto.Cipher import Blowfish
 
 
 def main():
-    # second()
-    # third()
-    # fourth()
-    # fifth()
-    # sixth()
-    # seventh()
-    # eighth()
+    second()
+    third()
+    fourth()
+    fifth()
+    sixth()
+    seventh()
+    eighth()
     nineth()
 
 
