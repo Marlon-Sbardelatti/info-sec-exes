@@ -1,16 +1,18 @@
 from Crypto.Util.Padding import pad, unpad
 from Crypto.Cipher import Blowfish
+from Crypto.Util import Counter
 
 
 def main():
-    second()
-    third()
-    fourth()
-    fifth()
-    sixth()
-    seventh()
-    eighth()
-    nineth()
+    # second()
+    # third()
+    # fourth()
+    # fifth()
+    # sixth()
+    # seventh()
+    # eighth()
+    # nineth()
+    thirteenth()
 
 
 def blowfish_ecb_encrypt(
@@ -41,6 +43,19 @@ def blowfish_cbc_encrypt(
     iv: bytes = bytes([1, 1, 2, 2, 3, 3, 4, 4]),
 ) -> bytes:
     cipher = Blowfish.new(key, Blowfish.MODE_CBC, iv)
+    padded_message = pad(plaintext, Blowfish.block_size, style="pkcs7")
+    encrypted = cipher.encrypt(padded_message)
+    pretty_print(encrypted)
+    return encrypted
+
+
+def blowfish_ctr_encrypt(
+    plaintext: bytes,
+    key: bytes = bytes([65, 66, 67, 68, 69]),
+    nonce: bytes = bytes([0, 20, 10, 120]),
+) -> bytes:
+    counter = Counter.new(32, prefix=nonce, initial_value=0)
+    cipher = Blowfish.new(key, Blowfish.MODE_CTR, counter=counter)
     padded_message = pad(plaintext, Blowfish.block_size, style="pkcs7")
     encrypted = cipher.encrypt(padded_message)
     pretty_print(encrypted)
@@ -109,6 +124,12 @@ def nineth():
     plaintext = b"FURB"
     encrypted = blowfish_ecb_encrypt(plaintext)
     blowfish_ecb_decrypt(encrypted, key=bytes([1, 1, 1, 1, 1]))
+
+
+def thirteenth():
+    print("Texto limpo: FURB\n")
+    plaintext = b"FURB"
+    blowfish_ctr_encrypt(plaintext)
 
 
 if __name__ == "__main__":
