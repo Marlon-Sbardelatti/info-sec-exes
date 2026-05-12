@@ -1,0 +1,2 @@
+# @attach-cookie-jar
+GET http://localhost:8000/products/91669a47-3980-42ae-bce3-290a2918739f
