@@ -1,12 +1,14 @@
 
 from abc import ABC, abstractmethod
-from typing import Optional
+
+from aes.algorithms.base import CipherAlgorithm
 
 
 class OperationMode(ABC):
-    def __init__(self, block_size: Optional[int] = 16):
+    def __init__(self, algorithm: CipherAlgorithm):
         super().__init__()
-        self.block_size = block_size
+        self.algorithm = algorithm
+        self.block_size = algorithm.block_size
 
     def split_blocks(self, input: bytes) -> list[list[bytes]]:
         skip = self.block_size
