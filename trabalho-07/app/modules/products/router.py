@@ -4,12 +4,14 @@ from typing import List
 from fastapi import APIRouter, Depends
 from app.modules.products.schemas import ProductRead, ProductCreate, ProductUpdate
 from app.modules.products.service import ProductService, get_product_service
+from app.core.dependencies.signed_request import signed_request
 
 router = APIRouter(prefix="/products", tags=["Products"])
 
 
 @router.get("", response_model=List[ProductRead], status_code=HTTPStatus.OK)
-def get_products(products_service: ProductService = Depends(get_product_service)):
+def get_products(products_service: ProductService = Depends(get_product_service), api_key: str = Depends(signed_request) ):
+    print("API KEY", api_key)
     products = products_service.get_products()
     return products
 
