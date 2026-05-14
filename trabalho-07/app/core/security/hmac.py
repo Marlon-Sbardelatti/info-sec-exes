@@ -9,12 +9,21 @@ class Hmac:
     def __init__(self, key: str | bytes):
         self.key = key.encode("utf-8") if isinstance(key, str) else key
 
-    async def build_payload(self, request: Request) -> str:
-        body = await request.body()
-        method = request.method
-        path = request.url.path
-        queries = "&".join(f"{k}={v}" for k, v in sorted(request.query_params.items()))
-        timestamp = request.headers.get("X-Timestamp")
+    async def build_payload(
+        self, request: Request | tuple[str, str, str, str, str]
+    ) -> str:
+        if isinstance(request, Request):
+            body = await request.body()
+            method = request.method
+            path = request.url.path
+            queries = "&".join(
+                f"{k}={v}" for k, v in sorted(request.query_params.items())
+            )
+            timestamp = request.headers.get("X-Timestamp")
+
+        else:
+            body, method, path, queries, timestamp = request
+            body = body.encode("utf-8")
 
         body_hash = hashlib.sha256(body).hexdigest()
 
@@ -39,15 +48,20 @@ class Hmac:
     ) -> bool:
         timestamp = request.headers.get("X-Timestamp")
         if timestamp is None or not self.verify_timestamp(timestamp):
-            raise HTTPException(status_code=401, detail="Request fora do intervalo de tempo de 30s.")
+            raise HTTPException(
+                status_code=401, detail="Request fora do intervalo de tempo de 30s."
+            )
 
         mac_received = request.headers.get("X-Signature")
 
         if mac_received is None:
-            raise HTTPException(status_code=401, detail="Assinatura de Requisição não recebida.")
+            raise HTTPException(
+                status_code=401, detail="Assinatura de Requisição não recebida."
+            )
 
         payload = await self.build_payload(request)
         mac = self.sign_request(payload)
+
         if not hmac.compare_digest(mac, mac_received):
             raise HTTPException(status_code=401, detail="Assinatura inválida.")
 

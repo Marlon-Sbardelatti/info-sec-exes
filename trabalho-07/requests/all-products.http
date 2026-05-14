@@ -2,4 +2,4 @@
 GET http://localhost:8000/products
 X-API-Key: APP-01
 X-Timestamp: {{$timestamp}}
-X-Signature: b4e5ad2b-7141-45f6-a308-d0f405be308f
+X-Signature: dxCVHeVX0WDPTaTadbytwwt0joOdcbmPso7m7RvlMCE=
