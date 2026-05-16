@@ -1,0 +1,21 @@
+# @attach-cookie-jar
+POST http://localhost:8000/products
+Content-Type: application/json
+
+{
+   "name": "Memória RAM",
+   "description": "memória ram de 16gb ddr5 6000mhz kingston",
+   "cost_price": 200.00,
+   "sell_price": 2899.00
+}
+
+# @attach-cookie-jar
+POST http://localhost:8000/products
+Content-Type: application/json
+
+{
+   "name": "SSD",
+   "description": "ssd 1tb sandisk",
+   "cost_price": 400.00,
+   "sell_price": 600.00
+}
