@@ -12,7 +12,7 @@ async def get_products(hmac: Hmac):
         payload = await hmac.build_payload(("", "GET", "/products", "", timestamp))
         mac = hmac.sign_request(payload)
 
-        # alterando o mac gerado para ficar incorreto
+        # Alterando o mac gerado para ficar incorreto
         # mac = f"{mac}{123}"
 
         headers = {
@@ -35,7 +35,7 @@ async def get_product_by_id(hmac: Hmac, product_id: UUID):
         payload = await hmac.build_payload(("", "GET", path, "", timestamp))
         mac = hmac.sign_request(payload)
 
-        # alterando o mac gerado para ficar incorreto
+        # Alterando o mac gerado para ficar incorreto
         # mac = f"{mac}{123}"
 
         headers = {
@@ -60,7 +60,7 @@ async def create_product(hmac: Hmac, product_create: ProductCreate):
         )
         mac = hmac.sign_request(payload)
 
-        # alterando o mac gerado para ficar incorreto
+        # Alterando o mac gerado para ficar incorreto
         # mac = f"{mac}{123}"
 
         headers = {
@@ -88,7 +88,7 @@ async def delete_product(hmac: Hmac, product_id: UUID):
         payload = await hmac.build_payload(("", "DELETE", path, "", timestamp))
         mac = hmac.sign_request(payload)
 
-        # alterando o mac gerado para ficar incorreto
+        # Alterando o mac gerado para ficar incorreto
         # mac = f"{mac}{123}"
 
         headers = {
@@ -112,9 +112,8 @@ async def main() -> None:
         print("[1] - Buscar todos produtos")
         print("[2] - Buscar produtos por ID")
         print("[3] - Criar produto")
-        print("[4] - Atualizar produto")
-        print("[5] - Remover produto")
-        print("[6] Sair")
+        print("[4] - Remover produto")
+        print("[5] Sair")
 
         operation = input("Escolha a opção: ")
         if not operation.isnumeric():
@@ -142,11 +141,9 @@ async def main() -> None:
                 )
                 await create_product(hmac, product_create)
             case 4:
-                pass
-            case 5:
                 product_id = UUID(input("ID:"))
                 await delete_product(hmac, product_id)
-            case 6:
+            case 5:
                 break
 
             case _:
