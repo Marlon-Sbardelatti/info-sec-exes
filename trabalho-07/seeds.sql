@@ -3,7 +3,9 @@ INSERT INTO clients (
     id,
     api_key,
     hmac_secret
-) VALUES ('60464aa4-8e4c-4147-80e3-6439441dbbd6' 'APP-01', 'J32Omu/0/qCX4WY44fydlX85LY5xIKz+qPiumT/aqUw=')
+) VALUES 
+    ('60464aa4-8e4c-4147-80e3-6439441dbbd6', 'APP-01', 'J32Omu/0/qCX4WY44fydlX85LY5xIKz+qPiumT/aqUw=');
+    ('31aabfbe-9086-4de9-aa17-07a0aa59df99', 'APP-02', '6Vp+2+kBec/yD8pXffNqvgzRGT9YOqKTyrmXHahhju0=');
 
 -- PRODUCTS
 INSERT INTO products (

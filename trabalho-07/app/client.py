@@ -3,7 +3,7 @@ import asyncio
 from datetime import datetime
 import httpx
 from app.core.security.hmac import Hmac
-from app.modules.products.schemas import ProductCreate, ProductUpdate
+from app.modules.products.schemas import ProductCreate
 
 
 async def get_products(hmac: Hmac):
@@ -21,8 +21,10 @@ async def get_products(hmac: Hmac):
             "X-Signature": mac,
         }
 
+
         response = await client.get("/products", headers=headers)
         print(f"\nStatus da Requisição={response.status_code}\n")
+        print(f"Headers={headers}\n")
         print(f"Resposta={response.text}\n")
 
 
@@ -44,6 +46,7 @@ async def get_product_by_id(hmac: Hmac, product_id: UUID):
 
         response = await client.get(path, headers=headers)
         print(f"\nStatus da Requisição={response.status_code}\n")
+        print(f"Headers={headers}\n")
         print(f"Resposta={response.text}\n")
 
 
@@ -74,6 +77,7 @@ async def create_product(hmac: Hmac, product_create: ProductCreate):
         }
         response = await client.post("/products", headers=headers, json=body)
         print(f"\nStatus da Requisição={response.status_code}\n")
+        print(f"Headers={headers}\n")
         print(f"Resposta={response.text}\n")
 
 
@@ -95,6 +99,7 @@ async def delete_product(hmac: Hmac, product_id: UUID):
 
         response = await client.delete(path, headers=headers)
         print(f"\nStatus da Requisição={response.status_code}\n")
+        print(f"Headers={headers}\n")
         print(f"Resposta={response.text}\n")
 
 
