@@ -1,6 +1,6 @@
-from algorithms.aes.key_schedule import KeySchedule
-
+from aes.aes import AES
 
 if __name__ == "__main__":
-    key_schedule = KeySchedule()
-    key_schedule.expand(b"segurancadainformacao")
+    aes = AES(b"sabonetesabonete")
+    cipher = aes.encrypt(b"historiahistoria")
+    print(cipher)
