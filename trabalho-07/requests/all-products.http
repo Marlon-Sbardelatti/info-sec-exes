@@ -1,0 +1,6 @@
+# @attach-cookie-jar
+GET http://localhost:8000/products
+X-API-Key: APP-01
+X-Timestamp: 1778889971
+# X-Timestamp: {{$timestamp}}
+X-Signature: j48DXp3WNeNmTau6IbJQB+kbGYI=
