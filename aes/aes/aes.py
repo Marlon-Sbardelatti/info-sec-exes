@@ -1,7 +1,12 @@
 from typing import TypeAlias
 
+from aes.tables.inverse_s_box import INVERSE_S_BOX
+from aes.tables.s_box import S_BOX
+from aes.tables.e_table import E_TABLE
+from aes.tables.l_table import L_TABLE
+from aes.tables.m_matrix import M_MATRIX
 from aes.key_schedule import KeySchedule
-from aes.utils import get_sbox_value_for, xor
+from aes.utils import get_table_value_for, xor
 
 State: TypeAlias = list[list[int]]
 
@@ -22,7 +27,7 @@ class AES:
 
             state = self._shift_rows(state)
             
-            # FALTA MIX COLUMNS
+            state = self._mix_columns(state)
 
             round_key = self._get_round_key(round)
             state = self._add_round_key(state, round_key)
@@ -36,9 +41,66 @@ class AES:
 
         return self._state_to_bytes(state)
 
-    def decrypt(self, cipher: bytes):
-        pass
+    def decrypt(self, cipher: bytes) -> bytes:
+        state = self._bytes_to_state(cipher)
 
+        round_n = self._get_round_key(self.rounds - 1)
+        state = self._add_round_key(state, round_n)
+
+        state = self._shift_rows(state, inverse=True)
+
+        state = self._sub_bytes(state, inverse=True)
+
+        for round in range(self.rounds - 1, 1, -1):
+            round_key = self._get_round_key(round)
+            state = self._add_round_key(state, round_key)
+
+            state = self._mix_columns(state)
+
+            state = self._shift_rows(state)
+        
+            state = self._sub_bytes(state, inverse=True)
+
+        round_0 = self._get_round_key(0)
+        state = self._add_round_key(state, round_0)
+
+        return self._state_to_bytes(state)
+
+    def _mix_columns(self, state: State) -> State:
+        result = self._empty_state()
+
+        for col in range(4):
+            for row in range(4):
+                col_from_state = [state[i][col] for i in range(4)]
+                row_from_matrix = [M_MATRIX[row][i] for i in range(4)]
+                
+                factors = [self._galois_product(a, b) for a, b in zip(col_from_state, row_from_matrix)]
+                
+                byte = 0x00
+                for f in factors:
+                    byte = xor(byte, f)
+
+                result[row][col] = byte
+
+        return result
+
+    def _galois_product(self, a: int, b: int) -> int:
+        if 0 in (a, b):
+            return 0
+        if a == 1:
+            return b
+        if b == 1:
+            return a
+        
+        a = get_table_value_for(a, L_TABLE)
+        b = get_table_value_for(b, L_TABLE)
+
+        sum = a + b
+        if sum > 0xFF:
+            sum -= 0xFF
+        
+        return get_table_value_for(sum, E_TABLE)
+        
     def _shift_rows(self, state: State, inverse: bool = False) -> State:
         result = self._empty_state()
 
@@ -60,12 +122,13 @@ class AES:
 
         return result
 
-    def _sub_bytes(self, state: State) -> State:
+    def _sub_bytes(self, state: State, inverse=True) -> State:
         result = self._empty_state()
 
+        table = INVERSE_S_BOX if inverse else S_BOX
         for col in range(4):
             for row in range(4):
-                result[row][col] = get_sbox_value_for(state[row][col])
+                result[row][col] = get_table_value_for(state[row][col], table)
 
         return result
 

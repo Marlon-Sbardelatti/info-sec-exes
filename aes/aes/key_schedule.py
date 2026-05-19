@@ -1,4 +1,5 @@
-from aes.utils import extract_words, get_sbox_value_for, xor_words
+from aes.tables.s_box import S_BOX
+from aes.utils import extract_words, get_table_value_for, xor_words
 
 class KeySchedule:
     def __init__(self, key: bytes):
@@ -91,7 +92,7 @@ class KeySchedule:
 
     def _sub_word(self, word: bytes) -> bytes:
         return [
-            get_sbox_value_for(byte)
+            get_table_value_for(byte, S_BOX)
             for byte in word
         ]
 
