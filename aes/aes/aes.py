@@ -100,7 +100,7 @@ class AES:
 
         result = a + b
         if result > 0xFF:
-            result -= 0xFF
+            result %= 0xFF
         
         return get_table_value_for(result, E_TABLE)
         
