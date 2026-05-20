@@ -5,6 +5,7 @@ from aes.tables.s_box import S_BOX
 from aes.tables.e_table import E_TABLE
 from aes.tables.l_table import L_TABLE
 from aes.tables.m_matrix import M_MATRIX
+from aes.tables.inverse_m_matrix import INVERSE_M_MATRIX
 from aes.key_schedule import KeySchedule
 from aes.utils import get_table_value_for, xor
 
@@ -51,13 +52,13 @@ class AES:
 
         state = self._sub_bytes(state, inverse=True)
 
-        for round in range(self.rounds - 1, 1, -1):
+        for round in range(self.rounds - 2, 0, -1):
             round_key = self._get_round_key(round)
             state = self._add_round_key(state, round_key)
 
-            state = self._mix_columns(state)
+            state = self._mix_columns(state, inverse=True)
 
-            state = self._shift_rows(state)
+            state = self._shift_rows(state, inverse=True)
         
             state = self._sub_bytes(state, inverse=True)
 
@@ -66,13 +67,15 @@ class AES:
 
         return self._state_to_bytes(state)
 
-    def _mix_columns(self, state: State) -> State:
+    def _mix_columns(self, state: State, inverse: bool = False) -> State:
         result = self._empty_state()
+
+        m_matrix = INVERSE_M_MATRIX if inverse else M_MATRIX
 
         for col in range(4):
             for row in range(4):
                 col_from_state = [state[i][col] for i in range(4)]
-                row_from_matrix = [M_MATRIX[row][i] for i in range(4)]
+                row_from_matrix = [m_matrix[row][i] for i in range(4)]
                 
                 factors = [self._galois_product(a, b) for a, b in zip(col_from_state, row_from_matrix)]
                 
@@ -95,11 +98,11 @@ class AES:
         a = get_table_value_for(a, L_TABLE)
         b = get_table_value_for(b, L_TABLE)
 
-        sum = a + b
-        if sum > 0xFF:
-            sum -= 0xFF
+        result = a + b
+        if result > 0xFF:
+            result -= 0xFF
         
-        return get_table_value_for(sum, E_TABLE)
+        return get_table_value_for(result, E_TABLE)
         
     def _shift_rows(self, state: State, inverse: bool = False) -> State:
         result = self._empty_state()
@@ -122,7 +125,7 @@ class AES:
 
         return result
 
-    def _sub_bytes(self, state: State, inverse=True) -> State:
+    def _sub_bytes(self, state: State, inverse: bool = False) -> State:
         result = self._empty_state()
 
         table = INVERSE_S_BOX if inverse else S_BOX
