@@ -2,11 +2,10 @@ from typing import override
 
 from modes.base import OperationMode
 
-class ECBMode(OperationMode):
+class CBCMode(OperationMode):
     @override
     def encrypt(self, plaintext):
         blocks = self.split_blocks(plaintext)
-        print("BLOCKS", blocks)
 
         ciphers = b""
         for b in blocks: 
