@@ -1,15 +1,16 @@
 from typing import TypeAlias
 
-from shared.block_cipher import BlockCipher
-from shared.utils import get_table_value_for, xor
+from crypto.shared import BlockCipher, get_table_value_for, xor
+from crypto.aes.tables import (
+    S_BOX,
+    E_TABLE,
+    L_TABLE,
+    M_MATRIX,
+    INVERSE_S_BOX,
+    INVERSE_M_MATRIX,
+)
+from crypto.aes.key_schedule import KeySchedule
 
-from aes.tables.inverse_s_box import INVERSE_S_BOX
-from aes.tables.s_box import S_BOX
-from aes.tables.e_table import E_TABLE
-from aes.tables.l_table import L_TABLE
-from aes.tables.m_matrix import M_MATRIX
-from aes.tables.inverse_m_matrix import INVERSE_M_MATRIX
-from aes.key_schedule import KeySchedule
 
 State: TypeAlias = list[list[int]]
 
@@ -17,9 +18,10 @@ class ExpandedKey:
     def __init__(self, schedule: list[bytes]):
         self.schedule = schedule
 
+
 class AES(BlockCipher[ExpandedKey]):
     BLOCK_SIZE = 16
-    
+
     def prepare_key(self, key: bytes) -> ExpandedKey:
         schedule = KeySchedule(key)
         return ExpandedKey(schedule.expand())
@@ -27,7 +29,7 @@ class AES(BlockCipher[ExpandedKey]):
     def encrypt(self, plaintext: bytes, key: ExpandedKey) -> bytes:
         key_schedule = key.schedule
         rounds = len(key_schedule) // 4
-    
+
         state = self._bytes_to_state(plaintext)
 
         round_0 = self._get_round_key(key_schedule, 0)
@@ -37,16 +39,16 @@ class AES(BlockCipher[ExpandedKey]):
             state = self._sub_bytes(state)
 
             state = self._shift_rows(state)
-            
+
             state = self._mix_columns(state)
 
             round_key = self._get_round_key(key_schedule, round)
             state = self._add_round_key(state, round_key)
-            
+
         state = self._sub_bytes(state)
 
         state = self._shift_rows(state)
-        
+
         round_n = self._get_round_key(key_schedule, rounds - 1)
         state = self._add_round_key(state, round_n)
 
@@ -55,7 +57,7 @@ class AES(BlockCipher[ExpandedKey]):
     def decrypt(self, cipher: bytes, key: ExpandedKey) -> bytes:
         key_schedule = key.schedule
         rounds = len(key_schedule) // 4
-        
+
         state = self._bytes_to_state(cipher)
 
         round_n = self._get_round_key(key_schedule, rounds - 1)
@@ -72,7 +74,7 @@ class AES(BlockCipher[ExpandedKey]):
             state = self._mix_columns(state, inverse=True)
 
             state = self._shift_rows(state, inverse=True)
-        
+
             state = self._sub_bytes(state, inverse=True)
 
         round_0 = self._get_round_key(key_schedule, 0)
@@ -89,9 +91,12 @@ class AES(BlockCipher[ExpandedKey]):
             for row in range(4):
                 col_from_state = [state[i][col] for i in range(4)]
                 row_from_matrix = [m_matrix[row][i] for i in range(4)]
-                
-                factors = [self._galois_product(a, b) for a, b in zip(col_from_state, row_from_matrix)]
-                
+
+                factors = [
+                    self._galois_product(a, b)
+                    for a, b in zip(col_from_state, row_from_matrix)
+                ]
+
                 byte = 0x00
                 for f in factors:
                     byte = xor(byte, f)
@@ -107,16 +112,16 @@ class AES(BlockCipher[ExpandedKey]):
             return b
         if b == 1:
             return a
-        
+
         a = get_table_value_for(a, L_TABLE)
         b = get_table_value_for(b, L_TABLE)
 
         result = a + b
         if result > 0xFF:
             result %= 0xFF
-        
+
         return get_table_value_for(result, E_TABLE)
-        
+
     def _shift_rows(self, state: State, inverse: bool = False) -> State:
         result = self._empty_state()
 
@@ -150,9 +155,7 @@ class AES(BlockCipher[ExpandedKey]):
 
     def _get_round_key(self, key_schedule: list[bytes], round: int) -> State:
         start = round * 4
-        round_key = b"".join(
-            key_schedule[start:start + 4]
-        )
+        round_key = b"".join(key_schedule[start : start + 4])
         return self._bytes_to_state(round_key)
 
     def _bytes_to_state(self, block: bytes) -> State:

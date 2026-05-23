@@ -1,5 +1,5 @@
-from modes.operation_mode import OperationMode
-from shared.padding import Padding
+from crypto.modes.operation_mode import OperationMode
+from crypto.shared.padding import Padding
 
 class ECBMode(OperationMode):
     

@@ -1,0 +1,2 @@
+KEY_SIZE = 16
+IV_SIZE = 16
