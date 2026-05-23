@@ -1,5 +1,8 @@
 from typing import TypeAlias
 
+from shared.block_cipher import BlockCipher
+from shared.utils import get_table_value_for, xor
+
 from aes.tables.inverse_s_box import INVERSE_S_BOX
 from aes.tables.s_box import S_BOX
 from aes.tables.e_table import E_TABLE
@@ -7,53 +10,63 @@ from aes.tables.l_table import L_TABLE
 from aes.tables.m_matrix import M_MATRIX
 from aes.tables.inverse_m_matrix import INVERSE_M_MATRIX
 from aes.key_schedule import KeySchedule
-from aes.utils import get_table_value_for, xor
 
 State: TypeAlias = list[list[int]]
 
-class AES:
-    def __init__(self, key: bytes):
-        self.BLOCK_SIZE = 16
-        self.key_schedule = self._expand_key(key)
-        self.rounds = len(self.key_schedule) // 4
+class ExpandedKey:
+    def __init__(self, schedule: list[bytes]):
+        self.schedule = schedule
 
-    def encrypt(self, plaintext: bytes) -> bytes:
+class AES(BlockCipher[ExpandedKey]):
+    BLOCK_SIZE = 16
+    
+    def prepare_key(self, key: bytes) -> ExpandedKey:
+        schedule = KeySchedule(key)
+        return ExpandedKey(schedule.expand())
+
+    def encrypt(self, plaintext: bytes, key: ExpandedKey) -> bytes:
+        key_schedule = key.schedule
+        rounds = len(key_schedule) // 4
+    
         state = self._bytes_to_state(plaintext)
 
-        round_0 = self._get_round_key(0)
+        round_0 = self._get_round_key(key_schedule, 0)
         state = self._add_round_key(state, round_0)
 
-        for round in range(1, self.rounds - 1):
+        for round in range(1, rounds - 1):
             state = self._sub_bytes(state)
 
             state = self._shift_rows(state)
             
             state = self._mix_columns(state)
 
-            round_key = self._get_round_key(round)
+            round_key = self._get_round_key(key_schedule, round)
             state = self._add_round_key(state, round_key)
             
         state = self._sub_bytes(state)
 
         state = self._shift_rows(state)
         
-        round_n = self._get_round_key(self.rounds - 1)
+        round_n = self._get_round_key(key_schedule, rounds - 1)
         state = self._add_round_key(state, round_n)
 
         return self._state_to_bytes(state)
 
-    def decrypt(self, cipher: bytes) -> bytes:
+    def decrypt(self, cipher: bytes, key: ExpandedKey) -> bytes:
+        key_schedule = key.schedule
+        rounds = len(key_schedule) // 4
+        
         state = self._bytes_to_state(cipher)
 
-        round_n = self._get_round_key(self.rounds - 1)
+        round_n = self._get_round_key(key_schedule, rounds - 1)
         state = self._add_round_key(state, round_n)
 
         state = self._shift_rows(state, inverse=True)
 
         state = self._sub_bytes(state, inverse=True)
 
-        for round in range(self.rounds - 2, 0, -1):
-            round_key = self._get_round_key(round)
+        for round in range(rounds - 2, 0, -1):
+            round_key = self._get_round_key(key_schedule, round)
             state = self._add_round_key(state, round_key)
 
             state = self._mix_columns(state, inverse=True)
@@ -62,7 +75,7 @@ class AES:
         
             state = self._sub_bytes(state, inverse=True)
 
-        round_0 = self._get_round_key(0)
+        round_0 = self._get_round_key(key_schedule, 0)
         state = self._add_round_key(state, round_0)
 
         return self._state_to_bytes(state)
@@ -135,16 +148,12 @@ class AES:
 
         return result
 
-    def _get_round_key(self, round: int) -> State:
+    def _get_round_key(self, key_schedule: list[bytes], round: int) -> State:
         start = round * 4
         round_key = b"".join(
-            self.key_schedule[start:start + 4]
+            key_schedule[start:start + 4]
         )
         return self._bytes_to_state(round_key)
-
-    def _expand_key(self, key: bytes) -> None:
-        schedule = KeySchedule(key)
-        return schedule.expand()
 
     def _bytes_to_state(self, block: bytes) -> State:
         state = self._empty_state()

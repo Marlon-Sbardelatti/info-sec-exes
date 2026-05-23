@@ -1,5 +1,5 @@
 from aes.tables.s_box import S_BOX
-from aes.utils import extract_words, get_table_value_for, xor_words
+from shared.utils import extract_words, get_table_value_for, xor_words
 
 class KeySchedule:
     def __init__(self, key: bytes):
