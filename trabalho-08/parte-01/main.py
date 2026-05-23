@@ -1,10 +1,10 @@
 from Crypto.Cipher import AES
 
 def main():
-    # exercise_1()
+    exercise_1()
     # exercise_2()
     # exercise_3()
-    exercise_4()
+    # exercise_4()
 
 def print_with_spaces(value: bytes):
     value_hex = value.hex()

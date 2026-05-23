@@ -4,6 +4,6 @@ POST http://localhost:8000/users HTTP/1.1
 Content-Type: application/json
 
 {
-  "login": "marlon@gmail.com",
-  "password": "123456"
+  "login": "sofia@gmail.com",
+  "password": "senhasegura123"
 }
