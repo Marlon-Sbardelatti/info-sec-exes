@@ -50,14 +50,14 @@ def exercise_2():
     print(f"Tamanho da tag de autenticação: {len(tag)} bytes")
 
     # salvar o texto cifrado em arquivo
-    with open("trabalho-08/parte-01/ciphertext.bin", "wb") as f:
+    with open("./ciphertext.bin", "wb") as f:
         f.write(ciphertext)
         f.write(tag)
 
     print("Texto cifrado salvo no arquivo 'ciphertext.bin'.")
 
 def exercise_3():
-    with open("trabalho-08/parte-01/ciphertext.bin", "rb") as f:
+    with open("./ciphertext.bin", "rb") as f:
         content = f.read() 
         ciphertext = content[:-16]  # tudo menos os últimos 16 bytes
         tag = content[-16:]  # últimos 16 bytes
@@ -79,7 +79,7 @@ def exercise_3():
     print(plaintext.decode())
 
 def exercise_4():
-    with open("trabalho-08/parte-01/edited_ciphertext.bin", "rb") as f:
+    with open("./edited_ciphertext.bin", "rb") as f:
         content = f.read() 
         ciphertext = content[:-16]  # tudo menos os últimos 16 bytes
         tag = content[-16:]  # últimos 16 bytes
