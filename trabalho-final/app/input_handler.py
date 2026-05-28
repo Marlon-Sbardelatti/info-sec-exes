@@ -1,5 +1,6 @@
 from app.constants import KEY_SIZE, IV_SIZE
 from app.types import OperationOption, ModeOption
+import os
 
 class InputHandler:
     @staticmethod
@@ -24,7 +25,7 @@ class InputHandler:
         while True:
             print("\nSelecione o modo:")
             print("[1] ECB")
-            print("]2] CBC")
+            print("[2] CBC")
 
             option = input("Opção: ").strip()
 
@@ -41,7 +42,7 @@ class InputHandler:
         while True:
             path = input("\nArquivo de entrada: ").strip()
 
-            if path:
+            if path and os.path.isfile(path):
                 return path
 
             print("\nCaminho inválido.")
@@ -51,7 +52,7 @@ class InputHandler:
         while True:
             path = input("Arquivo de saída: ").strip()
 
-            if path:
+            if path and os.path.isdir(os.path.dirname(path)):
                 return path
 
             print("\nCaminho inválido.")
