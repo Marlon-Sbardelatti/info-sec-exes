@@ -11,42 +11,45 @@ class Menu:
         self._aes = AES()
 
     def start(self):
-        operation = InputHandler.request_operation()
-
-        mode_name = InputHandler.request_mode()
-
-        input_path = InputHandler.request_input_file()
-
-        output_path = InputHandler.request_output_file()
-
-        key = InputHandler.request_key()
-
-        iv = None
-        if mode_name == "CBC":
-            iv = InputHandler.request_iv()
-
         try:
-            data = FileManager.read_bytes(input_path)
+            operation = InputHandler.request_operation()
 
-        except FileNotFoundError:
-            print("\nArquivo de entrada não encontrado.")
-            return
+            mode_name = InputHandler.request_mode()
 
-        try:
-            result = self._execute_operation(
-                operation=operation, mode_name=mode_name, data=data, key=key, iv=iv
-            )
+            input_path = InputHandler.request_input_file()
 
-            FileManager.write_bytes(output_path, result)
+            output_path = InputHandler.request_output_file()
 
-            if operation == "encrypt":
-                print("\nArquivo cifrado com sucesso!")
-            else:
-                print("\nArquivo decifrado com sucesso!")
+            key = InputHandler.request_key()
 
-        except Exception as error:
-            print(f"\nErro durante processamento: {error}")
+            iv = None
+            if mode_name == "CBC":
+                iv = InputHandler.request_iv()
 
+            try:
+                data = FileManager.read_bytes(input_path)
+
+            except FileNotFoundError:
+                print("\nArquivo de entrada não encontrado.")
+                return
+
+            try:
+                result = self._execute_operation(
+                    operation=operation, mode_name=mode_name, data=data, key=key, iv=iv
+                )
+
+                FileManager.write_bytes(output_path, result)
+
+                if operation == "encrypt":
+                    print("\nArquivo cifrado com sucesso!")
+                else:
+                    print("\nArquivo decifrado com sucesso!")
+
+            except Exception as error:
+                print(f"\nErro durante processamento: {error}")
+
+        except KeyboardInterrupt:
+            print("\nOperação cancelada pelo usuário.")
 
     def _execute_operation(
         self,
